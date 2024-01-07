@@ -1,24 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface dishesOrder {
-    id: number;
-    dish_id: number;
-    dish_name: number;
-    quantity: number;
-    order_id: number;
-}
-
-interface Order {
-    id: number;
-    clientName: string;
-    description: string;
-    clientPhone: number;
-    status: string;
-    orderTime: string;
-    branchAddress: string;
-    address: string;
-    dishesOrders: dishesOrder[];
-}
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {Order} from "../types/types";
 
 interface OrderState {
     allOrders: Order[];
@@ -35,10 +16,21 @@ const orderSlice = createSlice({
         setAllOrders: (state, action: PayloadAction<Order[]>) => {
             state.allOrders = action.payload;
         },
+        updateOrders: (state, action: PayloadAction<Order[]>) => {
+            const addOrders: Order[] = state.allOrders.filter((order: Order) =>
+                !action.payload.some((item: Order) => item.id === order.id));
+
+            state.allOrders = [...addOrders, ...action.payload];
+
+            console.log(action.payload);
+            console.log(state.allOrders);
+        },
     },
 });
 
-export const { setAllOrders
+export const {
+    setAllOrders,
+    updateOrders
 } = orderSlice.actions;
 
 export default orderSlice.reducer;

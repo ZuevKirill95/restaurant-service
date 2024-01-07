@@ -1,19 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-
-interface Category {
-    id: number;
-    category: string;
-}
-
-interface Dish {
-    id: number;
-    name: string;
-    description: string;
-    urlImage: string;
-    category: Category;
-    price: number;
-    weight: number;
-}
+import {Dish} from "../types/types";
 
 interface DishState {
     allBranchDishes: Dish[];
@@ -31,7 +17,7 @@ const dishSlice = createSlice({
     reducers: {
         setAllBranchDishes: (state, action: PayloadAction<Dish[]>) => {
             state.allBranchDishes = action.payload;
-        },setAllDish: (state, action: PayloadAction<Dish[]>) => {
+        }, setAllDish: (state, action: PayloadAction<Dish[]>) => {
             state.allDishes = action.payload;
         },
     },

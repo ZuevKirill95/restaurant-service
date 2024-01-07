@@ -3,19 +3,20 @@ import {Button, Card, Col, List, Row, Tabs} from 'antd';
 import FormRegistration from "../component/FormRegistration";
 import FormLogin from "../component/FormLogin";
 import Item = List.Item;
+import {Link} from "react-router-dom";
 
 const RegistrationPage: React.FC = () => {
     const [activeTabKey, setActiveTabKey] = useState<string>('tab1');
 
-    const handleTabChange = (key: string) => {
+    function handleTabChange(key: string) {
         setActiveTabKey(key);
-    };
+    }
 
-    const handleTabClick = (tabKey: string) => {
+    function handleTabClick(tabKey: string) {
         if (activeTabKey !== tabKey) {
             setActiveTabKey(tabKey);
         }
-    };
+    }
 
     const tabStyle = {
         display: 'flex',
@@ -55,16 +56,17 @@ const RegistrationPage: React.FC = () => {
                     <Card hoverable style={cardStyle}>
                         <Row gutter={20}>
                             <Col span={8}>
-                                <p style={pLogInStyle}>Please, Log In or</p>
+                                <p style={pLogInStyle}>Пожалуйста, войдите или</p>
                                 <Button type={'primary'} onClick={() => handleTabClick('tab2')}>
-                                    Create Account
+                                    Создайте аккаунт
                                 </Button>
                             </Col>
                             <Col span={13}>
-                                <p style={{fontSize: '20px'}}>Sign In</p>
-                                <p>Use Your Username And Password To Sign In</p>
+                                <p style={{fontSize: '20px'}}>Авторизация</p>
+                                <p>Используйте выш почту или имя ник и пароль для входа</p>
                                 <FormLogin/>
                             </Col>
+
                         </Row>
                     </Card>
                 </Item>
@@ -72,14 +74,15 @@ const RegistrationPage: React.FC = () => {
                     <Card hoverable style={cardStyle}>
                         <Row gutter={20}>
                             <Col span={13}>
-                                <p style={{fontSize: '20px'}}>Sign Up</p>
-                                <p>Please, Provide All The Correct Info To Create An Account</p>
+                                <p style={{fontSize: '20px'}}>Зарегистрироваться</p>
+                                <p>Пожалуйста, предоставьте всю правильную информацию для создания учетной записи</p>
                                 <FormRegistration/>
                             </Col>
                             <Col span={8}>
-                                <p style={pLogUpStyle}>Create Account or</p>
-                                <Button style={{marginLeft: 100}} type={'primary'} onClick={() => handleTabClick('tab1')}>
-                                    Sign In
+                                <p style={pLogUpStyle}>Создайте аккаунт или</p>
+                                <Button style={{marginLeft: 100}} type={'primary'}
+                                        onClick={() => handleTabClick('tab1')}>
+                                    Войдите
                                 </Button>
                             </Col>
                         </Row>

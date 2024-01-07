@@ -1,10 +1,13 @@
 package ru.sber.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.sber.entities.BranchOffice;
+import ru.sber.model.BranchOfficeLimit;
 import ru.sber.services.BranchOfficeService;
 
 import java.util.List;
@@ -19,15 +22,17 @@ import java.util.List;
 public class BranchOfficeController {
     private final BranchOfficeService branchOfficeService;
 
+    @Autowired
     public BranchOfficeController(BranchOfficeService branchOfficeService) {
         this.branchOfficeService = branchOfficeService;
     }
 
     @PutMapping
-    public ResponseEntity<?> openCloseBranchOffice(@RequestBody BranchOffice branchOffice) {
-        log.info("Закрывает и открывает филиал");
+    @PreAuthorize("hasRole('client_admin')")
+    public ResponseEntity<?> openCloseBranchOffice() {
+        log.info("Закрывает или открывает филиал");
 
-        boolean isStatus = branchOfficeService.openCloseBranchOffice(branchOffice.getId());
+        boolean isStatus = branchOfficeService.openCloseBranchOffice();
 
         if (isStatus) {
             return ResponseEntity.ok()
@@ -39,20 +44,18 @@ public class BranchOfficeController {
     }
 
     @GetMapping
-    public ResponseEntity<BranchOffice> getBranchOfficeByEmployee() {
+    public ResponseEntity<BranchOfficeLimit> getBranchOfficeByEmployee() {
         log.info("Выводит данные о филиале");
 
-        BranchOffice branchOffice = branchOfficeService.getBranchOfficeByEmployee();
         return ResponseEntity.ok()
-                .body(branchOffice);
+                .body(branchOfficeService.getBranchOfficeByEmployee());
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<BranchOffice>> getListBranchOffice() {
+    public ResponseEntity<List<BranchOfficeLimit>> getListBranchOffice() {
         log.info("Выводит данные о всех филиалах");
 
-        List<BranchOffice> branchOffice = branchOfficeService.getListBranchOffice();
         return ResponseEntity.ok()
-                .body(branchOffice);
+                .body(branchOfficeService.getListBranchOffice());
     }
 }

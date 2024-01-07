@@ -1,6 +1,7 @@
 package ru.sber.services;
 
 import ru.sber.entities.BranchOffice;
+import ru.sber.model.BranchOfficeLimit;
 
 import java.util.List;
 
@@ -13,19 +14,19 @@ public interface BranchOfficeService {
      *
      * @return boolean
      */
-    boolean openCloseBranchOffice(long branchId);
+    boolean openCloseBranchOffice();
 
     /**
      * Получает информацию о филиале
      *
      * @return BranchOffice
      */
-    BranchOffice getBranchOfficeByEmployee();
+    BranchOfficeLimit getBranchOfficeByEmployee();
 
     /**
      * Получает информацию о филиалах
      *
      * @return List<BranchOffice>
      */
-    List<BranchOffice> getListBranchOffice();
+    List<BranchOfficeLimit> getListBranchOffice();
 }

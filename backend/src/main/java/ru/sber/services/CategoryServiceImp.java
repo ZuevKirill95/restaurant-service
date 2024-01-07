@@ -1,6 +1,7 @@
 package ru.sber.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.sber.entities.Category;
 import ru.sber.repositories.CategoryRepository;
@@ -13,6 +14,7 @@ public class CategoryServiceImp implements CategoryService {
 
     private final CategoryRepository categoryRepository;
 
+    @Autowired
     public CategoryServiceImp(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
     }

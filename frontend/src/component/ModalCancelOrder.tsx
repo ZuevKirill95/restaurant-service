@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Input, message, Modal } from 'antd';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, message, Modal} from 'antd';
 import orderService from '../services/orderService';
-import { useDispatch } from 'react-redux';
+import {useDispatch} from 'react-redux';
+import {Props} from "../types/types";
 
-interface Props {
-    id: number;
-}
-
-const App: React.FC<Props> = ({ id }) => {
+const ModalCancelOrder: React.FC<Props> = ({id}) => {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
@@ -15,11 +12,11 @@ const App: React.FC<Props> = ({ id }) => {
     const [error, setError] = useState('');
     const [isUpdate, setIsUpdate] = useState(false);
 
-    const showModal = () => {
+    function showModal() {
         setOpen(true);
-    };
+    }
 
-    const handleOk = () => {
+    function handleOk() {
         if (inputValue.trim() === '') {
             setError('Please enter some text');
             return;
@@ -40,53 +37,54 @@ const App: React.FC<Props> = ({ id }) => {
             setLoading(false);
             setOpen(false);
         }, 1500);
-    };
+    }
 
-    const handleCancel = () => {
+    function handleCancel() {
         setOpen(false);
         setError('');
-    };
+    }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         setInputValue(e.target.value);
         setError('');
-    };
+    }
 
-    const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
         if (event.key === 'Enter') {
             handleOk();
         }
-    };
+    }
 
-    useEffect(() => {
-        orderService.getListOrders(dispatch);
-        setIsUpdate(false);
-    }, [isUpdate, dispatch]);
+    // useEffect(() => {
+    //     orderService.getListOrders(dispatch);
+    //     setIsUpdate(false);
+    // }, [isUpdate, dispatch]);
 
     return (
         <>
             <Button type="primary" onClick={showModal}>
-                Cancel
+                Отмена
             </Button>
             <Modal
-                visible={open}
-                title="Cancel order"
+                open={open}
+                title="Отменить заказ"
                 onOk={handleOk}
                 onCancel={handleCancel}
                 footer={[
                     <Button key="back" onClick={handleCancel}>
-                        Return
+                        Отмена
                     </Button>,
                     <Button key="submit" type="primary" loading={loading} onClick={handleOk}>
-                        Submit
+                        Отправить
                     </Button>,
                 ]}
             >
-                <Input value={inputValue} onChange={handleChange} onKeyDown={handleKeyPress} placeholder="Enter text" />
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <Input value={inputValue} onChange={handleChange} onKeyDown={handleKeyPress}
+                       placeholder="Введите причину"/>
+                {error && <p style={{color: 'red'}}>{error}</p>}
             </Modal>
         </>
     );
 };
 
-export default App;
+export default ModalCancelOrder;

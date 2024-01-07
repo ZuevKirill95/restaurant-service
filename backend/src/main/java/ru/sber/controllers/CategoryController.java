@@ -1,6 +1,7 @@
 package ru.sber.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ import java.util.List;
 public class CategoryController {
     private final CategoryService categoryService;
 
+    @Autowired
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
@@ -34,5 +36,4 @@ public class CategoryController {
         return ResponseEntity.ok()
                 .body(category);
     }
-
 }

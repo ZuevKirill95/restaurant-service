@@ -1,12 +1,17 @@
 package ru.sber.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import ru.sber.entities.BranchOffice;
-import ru.sber.exceptions.NoFoundEmployeeException;
+import ru.sber.entities.enums.EStatusEmployee;
+import ru.sber.exceptions.UserNotFound;
+import ru.sber.model.BranchOfficeLimit;
 import ru.sber.repositories.BranchOfficeRepository;
-import ru.sber.security.services.EmployeeDetailsImpl;
+import ru.sber.repositories.UserRepository;
 
 import java.util.List;
 
@@ -14,49 +19,62 @@ import java.util.List;
 @Service
 public class BranchOfficeServiceImp implements BranchOfficeService {
     private final BranchOfficeRepository branchOfficeRepository;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public BranchOfficeServiceImp(BranchOfficeRepository branchOfficeRepository) {
+    @Autowired
+    public BranchOfficeServiceImp(BranchOfficeRepository branchOfficeRepository, JwtService jwtService, UserRepository userRepository) {
         this.branchOfficeRepository = branchOfficeRepository;
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public boolean openCloseBranchOffice(long branchId) {
+    public boolean openCloseBranchOffice() {
         log.info("Закрывает/Открывает филиал");
 
-        BranchOffice branchOffice = getBranchOffice().gerBranchOffice();
+        var user = userRepository.findById(jwtService.getSubClaim(getUserJwtTokenSecurityContext()))
+                .orElseThrow(() -> new UserNotFound("Пользователь не найден"));
+        var isExit = userRepository.countByBranchOffice_IdAndStatus(
+                user.getBranchOffice().getId(), EStatusEmployee.INACTIVE);
 
-        if (branchOffice.getId() == branchId) {
+        if (isExit == 1) {
+            var branchOffice = user.getBranchOffice();
             branchOffice.setStatus(branchOffice.getStatus().equals("OPEN") ? "CLOSE" : "OPEN");
             branchOfficeRepository.save(branchOffice);
             return true;
         }
-
         return false;
     }
 
     @Override
-    public BranchOffice getBranchOfficeByEmployee() {
+    public BranchOfficeLimit getBranchOfficeByEmployee() {
         log.info("Получает информацию о филиале по сотруднику");
 
-        return getBranchOffice().gerBranchOffice();
+        var user = userRepository.findById(jwtService.getSubClaim(getUserJwtTokenSecurityContext()))
+                .orElseThrow(() -> new UserNotFound("Пользователь не найден"));
+
+        return new BranchOfficeLimit(user.getBranchOffice());
     }
 
     @Override
-    public List<BranchOffice> getListBranchOffice() {
+    public List<BranchOfficeLimit> getListBranchOffice() {
         log.info("Получает информацию о всех филиалах");
 
-        return branchOfficeRepository.findAll();
+        return branchOfficeRepository.findAll().stream().map(BranchOfficeLimit::new).toList();
     }
 
-    private EmployeeDetailsImpl getBranchOffice() {
-        log.info("Получает id сотрудника текущей сессии");
+    /**
+     * Получение данных о пользователе
+     */
+    private Jwt getUserJwtTokenSecurityContext() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        var employee = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
 
-        if (employee instanceof EmployeeDetailsImpl) {
-            return ((EmployeeDetailsImpl) employee);
+            return jwtAuthenticationToken.getToken();
         } else {
-            throw new NoFoundEmployeeException("Сотрудник не найден");
+            throw new UserNotFound("Пользователь не найден");
         }
     }
 }

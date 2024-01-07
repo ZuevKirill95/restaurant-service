@@ -1,6 +1,7 @@
 package ru.sber.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,7 @@ import java.util.List;
 public class DishBranchOfficeController {
     private final DishBranchOfficeService dishBranchOfficeService;
 
+    @Autowired
     public DishBranchOfficeController(DishBranchOfficeService dishBranchOfficeService) {
         this.dishBranchOfficeService = dishBranchOfficeService;
     }

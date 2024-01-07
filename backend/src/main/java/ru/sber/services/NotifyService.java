@@ -1,9 +1,7 @@
 package ru.sber.services;
 
-import ru.sber.entities.Position;
-
 /**
- * Сервис для взаимодействия с {@link Position должностью}
+ * Сервис для взаимодействия с {@link Role должностью}
  */
 public interface NotifyService {
     /**

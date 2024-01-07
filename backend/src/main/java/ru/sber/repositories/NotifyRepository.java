@@ -10,5 +10,11 @@ import ru.sber.entities.Notify;
  */
 @Repository
 public interface NotifyRepository extends JpaRepository<Notify, Long> {
+    /**
+     * Проверяет есть ли заказ в уведомлениях по id
+     *
+     * @param id id заказа
+     * @return boolean
+     */
     boolean existsByIdOrder(Long id);
 }

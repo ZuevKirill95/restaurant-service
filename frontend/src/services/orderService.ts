@@ -1,31 +1,27 @@
 import axios from "axios";
 import {Dispatch} from "redux";
 import authHeader from "./auth-header";
-import {setAllOrders} from "../slices/orderSlice";
-
-interface User {
-    accessToken: string;
-}
+import {setAllOrders, updateOrders} from "../slices/orderSlice";
+import {User} from "../types/types";
 
 const API_URL_ORDER = "orders"
 
-const updateOrderStatusById = async (id: number, status: string, branchId: number, branchAddress: string, dispatch: Dispatch) => {
+async function updateOrderStatusById(id: number, status: string, dispatch: Dispatch) {
     const headers = authHeader();
     try {
         const response = await axios.put(API_URL_ORDER + `/${id}`,
-            {status: status, branchId: branchId, branchAddress: branchAddress},
+            {status: status},
             {headers});
 
-        const updateOrder = response.data;
-        return updateOrder;
+        return response.data;
 
     } catch (error) {
         console.error("Ошибка обновления заказа:", error);
         throw error;
     }
-};
+}
 
-const cancelOrderById = async (id: number, message: string, dispatch: Dispatch): Promise<User> => {
+async function cancelOrderById(id: number, message: string, dispatch: Dispatch): Promise<User> {
     const headers = authHeader();
 
     try {
@@ -33,36 +29,63 @@ const cancelOrderById = async (id: number, message: string, dispatch: Dispatch):
             {message: message},
             {headers});
 
-        const updateOrder = response.data;
-        return updateOrder;
+        return response.data;
 
     } catch (error) {
         console.error("Ошибка отмены заказа:", error);
         throw error;
     }
-};
+}
 
-const getListOrders = async (dispatch: Dispatch) => {
+async function cancelOrderByListId(id: string, message: string, dispatch: Dispatch): Promise<User> {
     const headers = authHeader();
 
     try {
-        const response = await axios.get(API_URL_ORDER, { headers });
+        const response = await axios.put(API_URL_ORDER + `/cancel?listId=${id}`,
+            {message: message},
+            {headers});
 
-        const orders = response.data;
+        return response.data;
 
-        dispatch(setAllOrders(orders));
-
-        return orders;
     } catch (error) {
-        console.error("Ошибка получения заказов:", error);
+        console.error("Ошибка отмены заказов:", error);
         throw error;
     }
-};
+}
+
+async function getListOrders(dispatch: Dispatch) {
+    const headers = authHeader();
+
+    try {
+        const response = await axios.get(API_URL_ORDER, {headers});
+
+        dispatch(setAllOrders(response.data));
+        return response.data;
+    } catch (error) {
+        console.error("Ошибка получения заказов:", error);
+    }
+}
+
+async function getListOrdersByNotify(dispatch: Dispatch): Promise<number> {
+    const headers = authHeader();
+
+    try {
+        const response = await axios.get(`${API_URL_ORDER}/notify`, {headers});
+        dispatch(updateOrders(response.data));
+
+        return response.data.length;
+    } catch (error) {
+        console.error("Ошибка получения заказов по уведомлению: ", error);
+        throw error;
+    }
+}
 
 const orderService = {
     updateOrderStatusById,
     cancelOrderById,
+    cancelOrderByListId,
     getListOrders,
+    getListOrdersByNotify,
 };
 
 export default orderService;

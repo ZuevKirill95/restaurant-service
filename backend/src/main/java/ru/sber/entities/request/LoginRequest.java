@@ -1,16 +1,13 @@
 package ru.sber.entities.request;
 
-import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * Получение REST данных для входа {@link ru.sber.entities.Employee сотрудника}
- */
+@AllArgsConstructor
 @Data
+@NoArgsConstructor
 public class LoginRequest {
-    @NotBlank
-    private String employeeName;
-
-    @NotBlank
+    private String username;
     private String password;
 }

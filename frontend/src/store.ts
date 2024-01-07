@@ -3,7 +3,7 @@ import orderReducer from "./slices/orderSlice";
 import dishReducer from "./slices/dishSlice";
 import categoryReducer from "./slices/categorySlice";
 
-const store =  configureStore({
+const store = configureStore({
     reducer: {
         orders: orderReducer,
         dishes: dishReducer,

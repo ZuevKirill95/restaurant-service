@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import ru.sber.model.Order;
 import ru.sber.services.NotifyServiceImp;
 
+/**
+ * Класс для получения информации из кафки
+ */
 @Slf4j
 @Component
 public class KafkaListeners {

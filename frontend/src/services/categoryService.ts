@@ -5,7 +5,7 @@ import {setListCategory} from "../slices/categorySlice";
 
 const API_URL_CATEGORY = "categories"
 
-const getListDishByBranchId = async (dispatch: Dispatch) => {
+async function getListDishByBranchId(dispatch: Dispatch) {
     const headers = authHeader();
 
     try {
@@ -18,7 +18,7 @@ const getListDishByBranchId = async (dispatch: Dispatch) => {
         console.error("Ошибка получения всех категорий:", error);
         throw error;
     }
-};
+}
 
 const dishService = {
     getListDishByBranch: getListDishByBranchId

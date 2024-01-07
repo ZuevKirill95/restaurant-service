@@ -2,17 +2,14 @@ import React from 'react';
 import {Button, Form, Input, message} from 'antd';
 import authService from '../services/authService';
 import {LockOutlined, UserOutlined} from '@ant-design/icons';
-import {useNavigate} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
+import {Login} from "../types/types";
 
-interface Login {
-    employeeName: string;
-    password: string;
-}
 
 const FormLogin: React.FC = () => {
     const navigate = useNavigate();
 
-    const onFinish = (values: Login) => {
+    function onFinish(values: Login) {
         authService.login(values).then((user) => {
             console.log('Success:', user);
             navigate("/dishes");
@@ -22,38 +19,39 @@ const FormLogin: React.FC = () => {
             console.log(_content);
             message.error("Неправильный логин или пароль");
         })
-    };
+    }
 
     return (
         <Form
             name="basic"
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            style={{ maxWidth: 600 }}
-            initialValues={{ remember: true }}
+            labelCol={{span: 8}}
+            wrapperCol={{span: 16}}
+            style={{maxWidth: 600}}
+            initialValues={{remember: true}}
             onFinish={onFinish}
             autoComplete="off"
         >
             <Form.Item
-                label="Username"
+                label="Логин"
                 name="employeeName"
-                rules={[{ required: true, message: 'Please input your username!' }]}
+                rules={[{required: true, message: 'Пожалуйста введите вашу почту или ник!'}]}
             >
-                <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
+                <Input prefix={<UserOutlined className="site-form-item-icon"/>} placeholder="Ник или почта"/>
             </Form.Item>
 
             <Form.Item
-                label="Password"
+                label="Пароль"
                 name="password"
-                rules={[{ required: true, message: 'Please input your password!' }]}
+                rules={[{required: true, message: 'Пожалуйста введите ваш пароль!'}]}
             >
-                <Input.Password prefix={<LockOutlined className="site-form-item-icon" />} placeholder="Password" />
+                <Input.Password prefix={<LockOutlined className="site-form-item-icon"/>} placeholder="Пароль"/>
             </Form.Item>
 
-            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Form.Item wrapperCol={{offset: 8, span: 16}}>
                 <Button type="primary" htmlType="submit">
-                    Sign In
+                    Войти
                 </Button>
+                <Link style={{ marginLeft: 20 }}  to="/recovery">Восстановить пароль</Link>
             </Form.Item>
         </Form>
     );

@@ -11,7 +11,7 @@ export const NotFoundPage: React.FC = () => {
             extra={
                 <div>
                     <Button type="primary">
-                        <Link to="/">Назад на главную</Link>
+                        <Link to="/dishes">Назад на главную</Link>
                     </Button>
                 </div>
             }

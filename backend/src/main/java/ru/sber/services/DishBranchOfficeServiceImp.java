@@ -1,12 +1,16 @@
 package ru.sber.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import ru.sber.entities.DishesBranchOffice;
-import ru.sber.exceptions.NoFoundEmployeeException;
+import ru.sber.exceptions.UserNotFound;
 import ru.sber.repositories.DishesBranchOfficeRepository;
-import ru.sber.security.services.EmployeeDetailsImpl;
+import ru.sber.repositories.UserRepository;
 
 import java.util.List;
 
@@ -14,14 +18,24 @@ import java.util.List;
 @Slf4j
 public class DishBranchOfficeServiceImp implements DishBranchOfficeService {
     private final DishesBranchOfficeRepository dishesBranchOfficeRepository;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
 
-    public DishBranchOfficeServiceImp(DishesBranchOfficeRepository dishesBranchOfficeRepository) {
+    @Autowired
+    public DishBranchOfficeServiceImp(DishesBranchOfficeRepository dishesBranchOfficeRepository,
+                                      UserRepository userRepository,
+                                      JwtService jwtService) {
         this.dishesBranchOfficeRepository = dishesBranchOfficeRepository;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
 
     @Override
     public List<DishesBranchOffice> getListDishBranchOffice() {
-        return dishesBranchOfficeRepository.findByBranchOffice_Id(getBranchOfficeId());
+        var user = userRepository.findById(jwtService.getSubClaim(getUserJwtTokenSecurityContext()))
+                .orElseThrow(() -> new UserNotFound("Пользователь не найден"));
+
+        return dishesBranchOfficeRepository.findByBranchOffice_Id(user.getBranchOffice().getId());
     }
 
     @Override
@@ -29,15 +43,14 @@ public class DishBranchOfficeServiceImp implements DishBranchOfficeService {
         return dishesBranchOfficeRepository.findAll();
     }
 
-    private long getBranchOfficeId() {
-        log.info("Получает id филиала");
+    private Jwt getUserJwtTokenSecurityContext() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        var employee = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
 
-        if (employee instanceof EmployeeDetailsImpl) {
-            return ((EmployeeDetailsImpl) employee).getBranchOffice().getId();
+            return jwtAuthenticationToken.getToken();
         } else {
-            throw new NoFoundEmployeeException("Сотрудник не найден");
+            throw new UserNotFound("Пользователь не найден");
         }
     }
 }

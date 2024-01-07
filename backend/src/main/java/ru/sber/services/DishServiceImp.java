@@ -1,19 +1,23 @@
 package ru.sber.services;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.sber.entities.BranchOffice;
 import ru.sber.entities.Dish;
 import ru.sber.entities.DishesBranchOffice;
-import ru.sber.exceptions.NoFoundEmployeeException;
+import ru.sber.entities.User;
+import ru.sber.entities.enums.EStatusEmployee;
+import ru.sber.exceptions.UserNotFound;
 import ru.sber.repositories.DishRepository;
 import ru.sber.repositories.DishesBranchOfficeRepository;
-import ru.sber.security.services.EmployeeDetailsImpl;
+import ru.sber.repositories.UserRepository;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,10 +28,18 @@ import java.util.Optional;
 public class DishServiceImp implements DishService {
     private final DishRepository dishRepository;
     private final DishesBranchOfficeRepository dishesBranchOfficeRepository;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
 
-    public DishServiceImp(DishRepository dishRepository, DishesBranchOfficeRepository dishesBranchOfficeRepository) {
+    @Autowired
+    public DishServiceImp(DishRepository dishRepository,
+                          DishesBranchOfficeRepository dishesBranchOfficeRepository,
+                          UserRepository userRepository,
+                          JwtService jwtService) {
         this.dishRepository = dishRepository;
         this.dishesBranchOfficeRepository = dishesBranchOfficeRepository;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -39,7 +51,8 @@ public class DishServiceImp implements DishService {
         if (!isExistsDish) {
             dishRepository.save(dish);
         }
-        return dishesBranchOfficeRepository.save(new DishesBranchOffice(dish, getBranchOffice())).getDish().getId();
+        return dishesBranchOfficeRepository.save(
+                new DishesBranchOffice(dish, getUserJwtTokenSecurityContext().getBranchOffice())).getDish().getId();
     }
 
     @Override
@@ -49,10 +62,12 @@ public class DishServiceImp implements DishService {
 
         var isExistsDish = dishRepository.existsByName(name);
         Dish dish = dishRepository.findByName(name);
+        var idBranchOffice = getUserJwtTokenSecurityContext().getBranchOffice();
 
-        if (isExistsDish && !dishesBranchOfficeRepository.existsByBranchOffice_IdAndDish_Id(getBranchOffice().getId(), dish.getId())) {
+        if (isExistsDish && !dishesBranchOfficeRepository.existsByBranchOffice_IdAndDish_Id(
+                idBranchOffice.getId(), dish.getId())) {
 
-            dishesBranchOfficeRepository.save(new DishesBranchOffice(dish, getBranchOffice()));
+            dishesBranchOfficeRepository.save(new DishesBranchOffice(dish, idBranchOffice));
             return true;
         }
 
@@ -60,10 +75,12 @@ public class DishServiceImp implements DishService {
     }
 
     @Override
+    @Transactional
     public boolean updateDish(Dish dish) {
         log.info("Обновляет блюдо с именем {}", dish.getName());
 
-        var isExists = dishesBranchOfficeRepository.existsByBranchOffice_IdAndDish_Id(getBranchOffice().getId(), dish.getId());
+        var isExists = dishesBranchOfficeRepository.existsByBranchOffice_IdAndDish_Id(
+                getUserJwtTokenSecurityContext().getBranchOffice().getId(), dish.getId());
         if (isExists) {
             dishRepository.save(dish);
             return true;
@@ -75,9 +92,10 @@ public class DishServiceImp implements DishService {
     @Override
     @Transactional
     public boolean deleteDish(long id) {
-        log.info("Удаляет из филиала блюдо с id {} {}", id, getBranchOffice().getId());
+        var idBranchOffice = getUserJwtTokenSecurityContext().getBranchOffice().getId();
+        log.info("Удаляет из филиала блюдо с id {} {}", id, idBranchOffice);
 
-        var isExistsDish = dishesBranchOfficeRepository.existsByBranchOffice_IdAndDish_Id(getBranchOffice().getId(), id);
+        var isExistsDish = dishesBranchOfficeRepository.existsByBranchOffice_IdAndDish_Id(idBranchOffice, id);
         if (isExistsDish) {
             dishesBranchOfficeRepository.deleteByDish_Id(id);
             return true;
@@ -87,10 +105,12 @@ public class DishServiceImp implements DishService {
     }
 
     @Override
+    @Transactional
     public List<Dish> getListDish() {
         log.info("Получает все блюда в филиале");
 
-        return dishesBranchOfficeRepository.findByBranchOffice_Id(getBranchOffice().getId())
+        return dishesBranchOfficeRepository
+                .findByBranchOffice_Id(getUserJwtTokenSecurityContext().getBranchOffice().getId())
                 .stream()
                 .map(DishesBranchOffice::getDish)
                 .toList();
@@ -121,7 +141,7 @@ public class DishServiceImp implements DishService {
     public Optional<Dish> getDishById(long id) {
         log.info("Получает блюдо с id {}", id);
 
-        var isExists = dishesBranchOfficeRepository.existsByBranchOffice_IdAndDish_Id(getBranchOffice().getId(), id);
+        var isExists = dishesBranchOfficeRepository.existsByDish_Id(id);
 
         if (isExists) {
             return dishRepository.findById(id);
@@ -134,18 +154,18 @@ public class DishServiceImp implements DishService {
     public Page<Dish> getDishesByPage(int page, int size) {
         log.info("Получает блюдо по страницам");
 
-        Pageable pageable = PageRequest.of(page, size);
-        return dishRepository.findAll(pageable);
+        return dishRepository.findAll(PageRequest.of(page, size));
     }
 
-    private BranchOffice getBranchOffice() {
-        log.info("Получает id филиала");
+    private User getUserJwtTokenSecurityContext() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        var employee = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (employee instanceof EmployeeDetailsImpl) {
-            return ((EmployeeDetailsImpl) employee).getBranchOffice();
+        if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+
+            return userRepository.findById(jwtService.getSubClaim(jwtAuthenticationToken.getToken()))
+                    .orElseThrow(() -> new UserNotFound("Пользователь не найден"));
         } else {
-            throw new NoFoundEmployeeException("Сотрудник не найден");
+            throw new UserNotFound("Пользователь не найден");
         }
     }
 }
